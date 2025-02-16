@@ -33,7 +33,7 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 // Middleware
-app.UseHttpsRedirection();
+// Removed UseHttpsRedirection();
 app.UseCors("AllowAll");
 app.UseAuthorization();
 app.MapControllers();
