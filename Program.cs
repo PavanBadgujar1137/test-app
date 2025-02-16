@@ -7,27 +7,32 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Configure MySQL with Retry and SSL support
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        new MySqlServerVersion(new Version(8, 0, 31))
-    ));
+        builder.Configuration.GetConnectionString("DefaultConnection") + ";SslMode=Preferred;",
+        new MySqlServerVersion(new Version(8, 0, 31)),
+        mySqlOptions => mySqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(10),
+            errorNumbersToAdd: null
+        )));
 
 // Enable CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
-        builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+        policy => policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 });
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+// Enable Swagger in all environments
+app.UseSwagger();
+app.UseSwaggerUI();
 
+// Middleware
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 app.UseAuthorization();
